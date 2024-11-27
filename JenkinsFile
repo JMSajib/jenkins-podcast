@@ -1,0 +1,86 @@
+pipeline {
+  agent {
+    docker {
+      image 'python:3.11-slim'
+      args '--network="host" --user root -v /var/run/docker.sock:/var/run/docker.sock'
+    }
+  }
+
+  stages {
+    stage('Test') {
+      steps {
+        sh '''
+          set -e
+          ls -ltr
+          cd fast-api-test-main
+          pip install -r requirements.txt
+          uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+          exit 0
+        '''
+      }
+    }
+
+    // stage('Build and Push Docker Image') {
+    //   environment {
+    //     DOCKER_IMAGE = "jmsajib11/full-ci-cd:${BUILD_NUMBER}"
+    //     REGISTRY_CREDENTIALS = credentials('docker-cred')
+    //   }
+    //   steps {
+    //     script {
+    //         sh '''
+    //           set -e
+    //           cd java-maven-sonar-argocd-k8s/spring-boot-app
+    //           docker build -t ${DOCKER_IMAGE} .
+    //         '''
+    //         def dockerImage = docker.image("${DOCKER_IMAGE}")
+    //         docker.withRegistry('https://index.docker.io/v1/', "docker-cred") {
+    //             dockerImage.push()
+    //         }
+    //     }
+    //   }
+    // }
+
+    // stage('Update Deployment File') {
+    //   environment {
+    //     GIT_REPO_NAME = "argo-cd-repo"
+    //     GIT_USER_NAME = "JMSajib"
+    //     GIT_USER_EMAIL = credentials('github-email')
+    //   }
+    //   steps {
+    //     withCredentials([string(credentialsId: 'github', variable: 'GITHUB_TOKEN')]) {
+    //       sh '''
+    //         set -e
+
+    //         # Check if directory exists and remove it if necessary
+    //         if [ -d "${GIT_REPO_NAME}" ]; then
+    //           rm -rf ${GIT_REPO_NAME}
+    //         fi
+
+    //         # Clone the repository
+    //         git clone https://${GITHUB_TOKEN}@github.com/${GIT_USER_NAME}/${GIT_REPO_NAME}.git
+
+    //         # Navigate to the repository directory
+    //         cd ${GIT_REPO_NAME}
+
+    //         # Configure git user
+    //         git config user.email "${GIT_USER_EMAIL}"
+    //         git config user.name "${GIT_USER_NAME}"
+
+    //         # Optional: Ensure latest changes
+    //         git pull origin main
+
+    //         # Update the deployment file
+    //         sed -i "s|image: jmsajib11/full-ci-cd:[0-9]\\+|image: jmsajib11/full-ci-cd:${BUILD_NUMBER}|g" deployment.yml
+
+    //         # Add and commit changes
+    //         git add deployment.yml
+    //         git commit -m "Update deployment image to version ${BUILD_NUMBER} [Jenkins build ${BUILD_NUMBER}]"
+
+    //         # Push changes back to the repository
+    //         git push https://${GITHUB_TOKEN}@github.com/${GIT_USER_NAME}/${GIT_REPO_NAME}.git HEAD:main
+    //       '''
+    //     }
+    //   }
+    // }
+  }
+}
