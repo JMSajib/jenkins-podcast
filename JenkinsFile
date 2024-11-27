@@ -13,7 +13,7 @@ pipeline {
           set -e
           ls -ltr
           cd fast-api-test-main
-          pip install --user -r requirements.txt
+          pip install --user --no-cache-dir -r requirements.txt
           uvicorn main:app --host 0.0.0.0 --port 8000 --reload
           exit 0
         '''
